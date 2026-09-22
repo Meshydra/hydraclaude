@@ -1,0 +1,6 @@
+# build output goes straight to %LOCALAPPDATA%\ClaudeProfiles, nothing lands here
+*.exe
+*.pdb
+*.user
+dist/
+assets/preview/

@@ -6,6 +6,11 @@ Outputs (into assets/):
   hydra.ico             colour, transparent, 16-256px  -> exe, window, taskbar, shortcuts
   hydra-tray-light.ico  near-black glyph, 16-32px       -> notification area on a light taskbar
   hydra-tray-dark.ico   white glyph, 16-32px            -> notification area on a dark taskbar
+  hydra.icns            colour, 16-256pt @1x/@2x        -> the macOS app and its shortcuts
+  hydra-menubar.png     black template glyph, 18pt      -> macOS menu bar (plus @2x)
+
+The .icns is only written on macOS, where iconutil exists. The menu bar glyph is a template
+image: macOS recolours it for a light or dark menu bar, so one file replaces the two tray icons.
 
 The pink plate is removed by flood-filling the background colour in from the border, so
 background-coloured pixels *inside* the drawing would survive. Edge pixels are un-premultiplied
@@ -21,7 +26,10 @@ Pure Pillow, no numpy: the source is 266x266, so plain Python loops are instant.
 """
 
 import os
+import shutil
+import subprocess
 import sys
+import tempfile
 from collections import Counter, deque
 
 from PIL import Image
@@ -37,6 +45,10 @@ INK_DARK = (255, 255, 255)
 
 COLOUR_SIZES = [256, 128, 96, 64, 48, 40, 32, 24, 20, 16]
 TRAY_SIZES = [32, 24, 20, 16]
+# Stops at 256@2x (512px): the artwork is 266px, so anything larger is pure upscale and bulk.
+ICNS_SIZES = [16, 32, 128, 256]
+MENUBAR_PT = 18           # menu bar extras are drawn at 18pt; the glyph sits inside a 1pt margin
+INK_TEMPLATE = (0, 0, 0)  # template images are read for alpha only, so black is the convention
 
 PLATE_TOLERANCE = 44      # colour distance still considered "plate", for the flood fill
 EDGE_SOFT = 8             # below this distance the pixel is fully plate
@@ -185,6 +197,32 @@ def save_ico(im, path, sizes):
     print("  %-24s %s" % (os.path.basename(path), ", ".join(str(s) for s in sizes)))
 
 
+def save_icns(im, path):
+    if not shutil.which("iconutil"):
+        print("  %-24s skipped (iconutil is macOS only)" % os.path.basename(path))
+        return
+    with tempfile.TemporaryDirectory() as tmp:
+        iconset = os.path.join(tmp, "hydra.iconset")
+        os.makedirs(iconset)
+        for s in ICNS_SIZES:
+            im.resize((s, s), Image.LANCZOS).save(os.path.join(iconset, "icon_%dx%d.png" % (s, s)))
+            im.resize((s * 2, s * 2), Image.LANCZOS).save(os.path.join(iconset, "icon_%dx%d@2x.png" % (s, s)))
+        subprocess.run(["iconutil", "-c", "icns", iconset, "-o", path], check=True)
+    print("  %-24s %s @1x/@2x" % (os.path.basename(path), ", ".join(str(s) for s in ICNS_SIZES)))
+
+
+def save_menubar(mask, path):
+    glyph = tint(mask, INK_TEMPLATE)
+    for scale, suffix in ((1, ""), (2, "@2x")):
+        side = MENUBAR_PT * scale
+        inner = side - 2 * scale
+        canvas = Image.new("RGBA", (side, side), (0, 0, 0, 0))
+        small = glyph.resize((inner, inner), Image.LANCZOS)
+        canvas.paste(small, (scale, scale), small)
+        canvas.save(path.replace(".png", suffix + ".png"))
+    print("  %-24s %dpt @1x/@2x" % (os.path.basename(path), MENUBAR_PT))
+
+
 def main():
     debug = "--debug" in sys.argv
     if not os.path.isfile(SRC):
@@ -201,6 +239,9 @@ def main():
     mask = tray_mask(colour, debug=debug)
     save_ico(tint(mask, INK_LIGHT), os.path.join(ASSETS, "hydra-tray-light.ico"), TRAY_SIZES)
     save_ico(tint(mask, INK_DARK), os.path.join(ASSETS, "hydra-tray-dark.ico"), TRAY_SIZES)
+
+    save_icns(colour, os.path.join(ASSETS, "hydra.icns"))
+    save_menubar(mask, os.path.join(ASSETS, "hydra-menubar.png"))
 
     if debug:
         d = os.path.join(ASSETS, "preview")

@@ -4,3 +4,8 @@
 *.user
 dist/
 assets/preview/
+
+# macOS: SwiftPM build output (build.sh writes the app to ~/Applications by default)
+macos/.build/
+macos/.swiftpm/
+macos/dist/

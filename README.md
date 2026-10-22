@@ -4,11 +4,12 @@
 
 # HydraClaude
 
-**Run several Claude Desktop profiles side by side on Windows — and keep them working across
-every Claude auto-update.**
+**Run several Claude Desktop profiles side by side on Windows and macOS — and keep them working
+across every Claude auto-update.**
 
 [![Download](https://img.shields.io/github/v/release/Meshydra/hydraclaude?label=download&style=flat-square)](https://github.com/Meshydra/hydraclaude/releases/latest)
 [![Windows](https://img.shields.io/badge/Windows-10%20%7C%2011-0078D4?style=flat-square)](#requirements)
+[![macOS](https://img.shields.io/badge/macOS-14%2B-555555?style=flat-square)](macos/README.md)
 [![Ko-fi](https://img.shields.io/badge/Ko--fi-support-FF5E5B?style=flat-square)](https://ko-fi.com/meshydra)
 
 </div>
@@ -18,6 +19,9 @@ every Claude auto-update.**
 Claude Desktop gives you one login. HydraClaude gives you as many as you want — work, personal,
 a client account — each with its own history, settings and window, switchable from the
 notification area.
+
+> **On a Mac?** The native macOS build lives in [`macos/`](macos/README.md): a menu bar app with
+> the same profiles, launcher and config ideas. Everything below this line is the Windows build.
 
 ---
 
